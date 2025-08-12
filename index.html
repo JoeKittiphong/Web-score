@@ -115,9 +115,11 @@ function addPlayer() {
 }
 
 function removePlayer(index) {
-    players.splice(index, 1);
-    saveData();
-    renderPlayers();
+    if (confirm(`คุณต้องการลบ "${players[index].name}" ออกจากรายการหรือไม่?`)) {
+        players.splice(index, 1);
+        saveData();
+        renderPlayers();
+    }
 }
 
 function editName(index, newName) {
