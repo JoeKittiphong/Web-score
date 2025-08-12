@@ -60,6 +60,10 @@
         padding: 5px;
         margin-right: 5px;
     }
+    .drag-over {
+        border: 2px dashed #2196f3;
+        background: #e3f2fd;
+    }
 </style>
 </head>
 <body>
@@ -83,6 +87,7 @@
 
 <script>
 let players = JSON.parse(localStorage.getItem("players")) || [];
+let draggedIndex = null;
 
 function saveData() {
     localStorage.setItem("players", JSON.stringify(players));
@@ -92,15 +97,38 @@ function renderPlayers() {
     const container = document.getElementById("players");
     container.innerHTML = "";
     players.forEach((player, index) => {
-        container.innerHTML += `
-            <div class="player">
-                <input type="text" value="${player.name}" onchange="editName(${index}, this.value)">
-                <div class="score">${player.score}</div>
-                <button class="btn-add" onclick="changeScore(${index}, true)">ได้</button>
-                <button class="btn-sub" onclick="changeScore(${index}, false)">เสีย</button>
-                <button class="btn-del" onclick="removePlayer(${index})">ลบ</button>
-            </div>
+        const div = document.createElement("div");
+        div.className = "player";
+        div.draggable = true; // เปิดให้ลากได้
+
+        // Event Drag
+        div.addEventListener("dragstart", () => { draggedIndex = index; });
+        div.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            div.classList.add("drag-over");
+        });
+        div.addEventListener("dragleave", () => {
+            div.classList.remove("drag-over");
+        });
+        div.addEventListener("drop", () => {
+            div.classList.remove("drag-over");
+            if (draggedIndex !== null && draggedIndex !== index) {
+                const draggedItem = players.splice(draggedIndex, 1)[0];
+                players.splice(index, 0, draggedItem);
+                saveData();
+                renderPlayers();
+            }
+        });
+
+        // HTML ภายในแถว
+        div.innerHTML = `
+            <input type="text" value="${player.name}" onchange="editName(${index}, this.value)">
+            <div class="score">${player.score}</div>
+            <button class="btn-add" onclick="changeScore(${index}, true)">ได้</button>
+            <button class="btn-sub" onclick="changeScore(${index}, false)">เสีย</button>
+            <button class="btn-del" onclick="removePlayer(${index})">ลบ</button>
         `;
+        container.appendChild(div);
     });
 }
 
