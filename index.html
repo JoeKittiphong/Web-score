@@ -74,7 +74,7 @@
 <!-- ควบคุมคะแนนกลาง -->
 <div id="topControls">
     <label>เล่นตาละ :</label>
-    <input type="number" id="globalChange" value="1" style="width:80px;">
+    <input type="number" id="globalChange" value="20" style="width:80px;">
 </div>
 
 <!-- เพิ่มผู้เล่น -->
@@ -172,7 +172,7 @@ function addPlayer() {
 }
 
 function removePlayer(index) {
-    if (confirm(`คุณต้องการลบ "${players[index].name}" ออกจากรายการหรือไม่?`)) {
+    if (confirm(`ลบ "${players[index].name}" ออกจากรายการหรือไม่?`)) {
         players.splice(index, 1);
         saveData();
         renderPlayers();
