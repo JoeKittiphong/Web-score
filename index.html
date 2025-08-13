@@ -3,200 +3,218 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>จัดการคะแนน</title>
+<title>ระบบจัดการคะแนนหลายวิชา</title>
 <style>
     body {
         font-family: sans-serif;
-        max-width: 500px;
-        margin: auto;
-        padding: 20px;
+        margin: 0;
         background: #f4f4f4;
+        padding: 20px;
     }
-    h2 { text-align: center; }
-    .player {
-        background: #fff;
-        padding: 10px;
-        margin: 5px 0;
+    h1, h2 {
+        text-align: center;
+    }
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .flex {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-radius: 5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         gap: 5px;
-        touch-action: none; /* ป้องกัน Scroll ระหว่างลาก */
+        margin-bottom: 10px;
+        flex-wrap: wrap;
     }
-    .player input[type="text"] {
-        border: none;
-        font-size: 1em;
-        width: 120px;
-        background: transparent;
+    input, select, button {
+        padding: 8px;
+        font-size: 14px;
+    }
+    button {
+        cursor: pointer;
+    }
+    ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    li {
+        background: #f9f9f9;
+        padding: 8px;
+        margin-bottom: 5px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+    .name {
+        flex: 1;
+        margin-right: 5px;
     }
     .score {
-        font-size: 1.2em;
-        font-weight: bold;
         width: 50px;
         text-align: center;
     }
-    button {
+    .btn {
         padding: 5px 8px;
-        cursor: pointer;
         border: none;
-        border-radius: 4px;
+        border-radius: 3px;
+        color: white;
     }
-    .btn-add { background: #4caf50; color: white; }
-    .btn-sub { background: #f44336; color: white; }
-    .btn-del { background: gray; color: white; }
-    #topControls {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-bottom: 10px;
-    }
-    #addPlayerSection {
-        display: flex;
-        margin-bottom: 10px;
-    }
-    #addPlayerSection input {
-        flex: 1;
-        padding: 5px;
-        margin-right: 5px;
-    }
-    .drag-over {
-        border: 2px dashed #2196f3;
-        background: #e3f2fd;
+    .add { background: #4CAF50; }
+    .sub { background: #f44336; }
+    .del { background: #888; }
+    .subject-btn {
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        padding: 5px 10px;
     }
 </style>
 </head>
 <body>
 
-<h2>รายการได้เสีย</h2>
+<div class="container">
+    <h1>ระบบจัดการคะแนนหลายวิชา</h1>
 
-<!-- ควบคุมคะแนนกลาง -->
-<div id="topControls">
-    <label>เล่นตาละ :</label>
-    <input type="number" id="globalChange" value="20" style="width:80px;">
+    <!-- เลือกวิชา -->
+    <div class="flex">
+        <select id="subjectSelect"></select>
+        <input type="text" id="newSubject" placeholder="ชื่อวิชาใหม่">
+        <button class="subject-btn" onclick="addSubject()">เพิ่มวิชา</button>
+    </div>
+
+    <!-- คะแนนกลาง -->
+    <div class="flex">
+        <label>คะแนนกลาง: </label>
+        <input type="number" id="scoreStep" value="1">
+    </div>
+
+    <!-- เพิ่มผู้เล่น -->
+    <div class="flex">
+        <input type="text" id="playerName" placeholder="ชื่อผู้เล่น">
+        <button onclick="addPlayer()">เพิ่ม</button>
+    </div>
+
+    <!-- รายชื่อผู้เล่น -->
+    <ul id="playerList"></ul>
 </div>
-
-<!-- เพิ่มผู้เล่น -->
-<div id="addPlayerSection">
-    <input type="text" id="playerName" placeholder="ชื่อผู้เล่น">
-    <button onclick="addPlayer()">เพิ่ม</button>
-</div>
-
-<!-- รายชื่อผู้เล่น -->
-<div id="players"></div>
 
 <script>
-let players = JSON.parse(localStorage.getItem("players")) || [];
+let subjects = JSON.parse(localStorage.getItem('subjects')) || [
+    { name: "วิชาแรก", players: [] }
+];
+let currentSubjectIndex = 0;
 let draggedIndex = null;
-let touchStartIndex = null;
 
 function saveData() {
-    localStorage.setItem("players", JSON.stringify(players));
+    localStorage.setItem('subjects', JSON.stringify(subjects));
 }
 
-function renderPlayers() {
-    const container = document.getElementById("players");
-    container.innerHTML = "";
-    players.forEach((player, index) => {
-        const div = document.createElement("div");
-        div.className = "player";
-        div.draggable = true; // Desktop drag
-
-        // Desktop Drag & Drop
-        div.addEventListener("dragstart", () => { draggedIndex = index; });
-        div.addEventListener("dragover", (e) => {
-            e.preventDefault();
-            div.classList.add("drag-over");
-        });
-        div.addEventListener("dragleave", () => {
-            div.classList.remove("drag-over");
-        });
-        div.addEventListener("drop", () => {
-            div.classList.remove("drag-over");
-            if (draggedIndex !== null && draggedIndex !== index) {
-                const draggedItem = players.splice(draggedIndex, 1)[0];
-                players.splice(index, 0, draggedItem);
-                saveData();
-                renderPlayers();
-            }
-        });
-
-        // Mobile Touch Drag
-        div.addEventListener("touchstart", () => { touchStartIndex = index; });
-        div.addEventListener("touchmove", (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            const over = target?.closest(".player");
-            document.querySelectorAll(".player").forEach(p => p.classList.remove("drag-over"));
-            if (over && over !== div) over.classList.add("drag-over");
-        });
-        div.addEventListener("touchend", (e) => {
-            const touch = e.changedTouches[0];
-            const target = document.elementFromPoint(touch.clientX, touch.clientY);
-            const dropTarget = target?.closest(".player");
-            document.querySelectorAll(".player").forEach(p => p.classList.remove("drag-over"));
-            if (dropTarget) {
-                const dropIndex = Array.from(container.children).indexOf(dropTarget);
-                if (touchStartIndex !== null && dropIndex !== touchStartIndex) {
-                    const draggedItem = players.splice(touchStartIndex, 1)[0];
-                    players.splice(dropIndex, 0, draggedItem);
-                    saveData();
-                    renderPlayers();
-                }
-            }
-            touchStartIndex = null;
-        });
-
-        // HTML ภายในแถว
-        div.innerHTML = `
-            <input type="text" value="${player.name}" onchange="editName(${index}, this.value)">
-            <div class="score">${player.score}</div>
-            <button class="btn-add" onclick="changeScore(${index}, true)">ได้</button>
-            <button class="btn-sub" onclick="changeScore(${index}, false)">เสีย</button>
-            <button class="btn-del" onclick="removePlayer(${index})">ลบ</button>
-        `;
-        container.appendChild(div);
+function renderSubjects() {
+    const select = document.getElementById('subjectSelect');
+    select.innerHTML = "";
+    subjects.forEach((subj, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = subj.name;
+        if (index === currentSubjectIndex) option.selected = true;
+        select.appendChild(option);
     });
+    renderPlayers();
+}
+
+document.getElementById('subjectSelect').addEventListener('change', (e) => {
+    currentSubjectIndex = parseInt(e.target.value);
+    renderPlayers();
+});
+
+function addSubject() {
+    const name = document.getElementById('newSubject').value.trim();
+    if (!name) return;
+    subjects.push({ name, players: [] });
+    document.getElementById('newSubject').value = "";
+    currentSubjectIndex = subjects.length - 1;
+    saveData();
+    renderSubjects();
 }
 
 function addPlayer() {
-    const name = document.getElementById("playerName").value.trim();
-    if (name) {
-        players.push({ name: name, score: 0 });
-        document.getElementById("playerName").value = "";
-        saveData();
-        renderPlayers();
-    }
-}
-
-function removePlayer(index) {
-    if (confirm(`ลบ "${players[index].name}" ออกจากรายการหรือไม่?`)) {
-        players.splice(index, 1);
-        saveData();
-        renderPlayers();
-    }
-}
-
-function editName(index, newName) {
-    players[index].name = newName;
-    saveData();
-}
-
-function changeScore(index, isAdd) {
-    let amount = parseInt(document.getElementById("globalChange").value);
-    if (isNaN(amount)) amount = 1;
-    if (isAdd) {
-        players[index].score += amount;
-    } else {
-        players[index].score -= amount;
-    }
+    const name = document.getElementById('playerName').value.trim();
+    if (!name) return;
+    subjects[currentSubjectIndex].players.push({ name, score: 0 });
+    document.getElementById('playerName').value = "";
     saveData();
     renderPlayers();
 }
 
-renderPlayers();
+function renderPlayers() {
+    const list = document.getElementById('playerList');
+    list.innerHTML = "";
+    subjects[currentSubjectIndex].players.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.draggable = true;
+
+        // รองรับ drag & drop บนมือถือ
+        li.addEventListener('touchstart', () => draggedIndex = index);
+        li.addEventListener('touchend', (e) => {
+            const target = document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            if (target && target.tagName === 'LI') {
+                const dropIndex = [...list.children].indexOf(target);
+                movePlayer(draggedIndex, dropIndex);
+            }
+        });
+
+        // รองรับ drag & drop บนคอม
+        li.addEventListener('dragstart', () => draggedIndex = index);
+        li.addEventListener('dragover', (e) => e.preventDefault());
+        li.addEventListener('drop', () => movePlayer(draggedIndex, index));
+
+        li.innerHTML = `
+            <input class="name" value="${player.name}" onchange="editName(${index}, this.value)">
+            <span class="score">${player.score}</span>
+            <button class="btn add" onclick="changeScore(${index}, 1)">ได้</button>
+            <button class="btn sub" onclick="changeScore(${index}, -1)">เสีย</button>
+            <button class="btn del" onclick="deletePlayer(${index})">ลบ</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+function editName(index, newName) {
+    subjects[currentSubjectIndex].players[index].name = newName;
+    saveData();
+}
+
+function changeScore(index, direction) {
+    const step = parseInt(document.getElementById('scoreStep').value) || 1;
+    subjects[currentSubjectIndex].players[index].score += direction * step;
+    saveData();
+    renderPlayers();
+}
+
+function deletePlayer(index) {
+    if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรายชื่อนี้?")) {
+        subjects[currentSubjectIndex].players.splice(index, 1);
+        saveData();
+        renderPlayers();
+    }
+}
+
+function movePlayer(fromIndex, toIndex) {
+    if (fromIndex === toIndex) return;
+    const arr = subjects[currentSubjectIndex].players;
+    const [moved] = arr.splice(fromIndex, 1);
+    arr.splice(toIndex, 0, moved);
+    saveData();
+    renderPlayers();
+}
+
+renderSubjects();
 </script>
 
 </body>
