@@ -79,13 +79,13 @@
 <body>
 
 <div class="container">
-    <h1>ระบบจัดการคะแนนหลายวิชา</h1>
+    <h1>ระบบจัดการหลายเจ้ามือ</h1>
 
     <!-- เลือกวิชา -->
     <div class="flex">
         <select id="subjectSelect"></select>
         <input type="text" id="newSubject" placeholder="ชื่อวิชาใหม่">
-        <button class="subject-btn" onclick="addSubject()">เพิ่มวิชา</button>
+        <button class="subject-btn" onclick="addSubject()">เพิ่มเจ้ามือ</button>
     </div>
 
     <!-- คะแนนกลาง -->
@@ -106,7 +106,7 @@
 
 <script>
 let subjects = JSON.parse(localStorage.getItem('subjects')) || [
-    { name: "วิชาแรก", players: [] }
+    { name: "เจ้ามือคนแรก", players: [] }
 ];
 let currentSubjectIndex = 0;
 let draggedIndex = null;
