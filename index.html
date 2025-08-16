@@ -56,8 +56,18 @@
     cursor: pointer;
     border-radius: 4px;
   }
+  .multiplier-buttons button.active {
+    background: #4CAF50;
+    color: white;
+    font-weight: bold;
+  }
   .multiplier-buttons button:hover {
     background: #ddd;
+  }
+  .current-value {
+    margin-top: 5px;
+    font-weight: bold;
+    color: #333;
   }
 </style>
 </head>
@@ -73,17 +83,18 @@
 
 <div>
   <label>ตาละ: </label>
-  <input type="number" id="pointValue" value="20">
+  <input type="number" id="pointValue" value="20" oninput="updateCurrentValue()">
   <div class="multiplier-buttons">
-    <button onclick="multiplyValue(2)">×2</button>
-    <button onclick="multiplyValue(3)">×3</button>
-    <button onclick="multiplyValue(4)">×4</button>
-    <button onclick="multiplyValue(5)">×5</button>
-    <button onclick="multiplyValue(6)">×6</button>
-    <button onclick="multiplyValue(8)">×8</button>
-    <button onclick="multiplyValue(10)">×10</button>
-    <button onclick="multiplyValue(12)">×12</button>
+    <button onclick="toggleMultiplier(2)">×2</button>
+    <button onclick="toggleMultiplier(3)">×3</button>
+    <button onclick="toggleMultiplier(4)">×4</button>
+    <button onclick="toggleMultiplier(5)">×5</button>
+    <button onclick="toggleMultiplier(6)">×6</button>
+    <button onclick="toggleMultiplier(8)">×8</button>
+    <button onclick="toggleMultiplier(10)">×10</button>
+    <button onclick="toggleMultiplier(12)">×12</button>
   </div>
+  <div class="current-value">ค่าที่ใช้คิด: <span id="currentValue">20</span></div>
 </div>
 
 <div>
@@ -98,7 +109,10 @@ let data = JSON.parse(localStorage.getItem("multiSubjectData") || '{"subjects": 
 let subjectSelect = document.getElementById("subjectSelect");
 let playerList = document.getElementById("playerList");
 let pointValueInput = document.getElementById("pointValue");
+let currentValueSpan = document.getElementById("currentValue");
 let draggedIndex = null;
+
+let activeMultiplier = 1; // ค่า multiplier ปัจจุบัน
 
 function saveData() {
   localStorage.setItem("multiSubjectData", JSON.stringify(data));
@@ -183,7 +197,7 @@ function renderPlayers() {
     btnAdd.className = "btn btn-add";
     btnAdd.textContent = "ได้";
     btnAdd.onclick = () => {
-      p.score += Number(pointValueInput.value);
+      p.score += getCurrentValue();
       saveData();
       renderPlayers();
     };
@@ -192,7 +206,7 @@ function renderPlayers() {
     btnSub.className = "btn btn-sub";
     btnSub.textContent = "เสีย";
     btnSub.onclick = () => {
-      p.score -= Number(pointValueInput.value);
+      p.score -= getCurrentValue();
       saveData();
       renderPlayers();
     };
@@ -232,9 +246,33 @@ function addPlayer() {
   }
 }
 
-function multiplyValue(multiplier) {
-  let input = document.getElementById("pointValue");
-  input.value = Number(input.value) * multiplier;
+function getCurrentValue() {
+  return Number(pointValueInput.value) * activeMultiplier;
+}
+
+function updateCurrentValue() {
+  currentValueSpan.textContent = getCurrentValue();
+}
+
+function toggleMultiplier(multiplier) {
+  let buttons = document.querySelectorAll(".multiplier-buttons button");
+
+  if (activeMultiplier === multiplier) {
+    // ถ้ากดซ้ำ -> reset กลับ 1
+    activeMultiplier = 1;
+  } else {
+    activeMultiplier = multiplier;
+  }
+
+  // update ปุ่ม active
+  buttons.forEach(btn => {
+    btn.classList.remove("active");
+    if (btn.textContent === "×" + multiplier && activeMultiplier === multiplier) {
+      btn.classList.add("active");
+    }
+  });
+
+  updateCurrentValue();
 }
 
 // First load
@@ -244,6 +282,7 @@ if (!data.current) {
   renderSubjects();
   renderPlayers();
 }
+updateCurrentValue();
 </script>
 
 </body>
