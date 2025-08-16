@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบจัดการคะแนนหลายวิชา</title>
+<title>ระบบจัดการเงินเจ้ามือ</title>
 <style>
   body { font-family: sans-serif; max-width: 500px; margin: auto; padding: 10px; }
   h1 { text-align: center; }
@@ -47,6 +47,18 @@
   .btn-sub { background: #F44336; color: white; width: 40%; }
   .btn-del { background: #aaa; color: white; width: 20%; font-weight: bold; }
   .drag-over { background: #d0f0ff !important; }
+  .multiplier-buttons button {
+    margin: 2px;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    border: 1px solid #999;
+    background: #eee;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  .multiplier-buttons button:hover {
+    background: #ddd;
+  }
 </style>
 </head>
 <body>
@@ -62,6 +74,16 @@
 <div>
   <label>ตาละ: </label>
   <input type="number" id="pointValue" value="20">
+  <div class="multiplier-buttons">
+    <button onclick="multiplyValue(2)">×2</button>
+    <button onclick="multiplyValue(3)">×3</button>
+    <button onclick="multiplyValue(4)">×4</button>
+    <button onclick="multiplyValue(5)">×5</button>
+    <button onclick="multiplyValue(6)">×6</button>
+    <button onclick="multiplyValue(8)">×8</button>
+    <button onclick="multiplyValue(10)">×10</button>
+    <button onclick="multiplyValue(12)">×12</button>
+  </div>
 </div>
 
 <div>
@@ -141,29 +163,6 @@ function renderPlayers() {
       }
     });
 
-    // Touch Events (Mobile)
-    let touchStartY = null;
-    div.addEventListener("touchstart", e => {
-      draggedIndex = index;
-      touchStartY = e.touches[0].clientY;
-    });
-    div.addEventListener("touchmove", e => {
-      e.preventDefault();
-      let touchY = e.touches[0].clientY;
-      let target = document.elementFromPoint(e.touches[0].clientX, touchY);
-      let dropTarget = target?.closest(".player");
-      if (dropTarget && dropTarget !== div) {
-        let dropIndex = Array.from(playerList.children).indexOf(dropTarget);
-        if (dropIndex !== -1 && dropIndex !== draggedIndex) {
-          let moved = players.splice(draggedIndex, 1)[0];
-          players.splice(dropIndex, 0, moved);
-          draggedIndex = dropIndex;
-          saveData();
-          renderPlayers();
-        }
-      }
-    });
-
     // Row 1
     let rowTop = document.createElement("div");
     rowTop.className = "row-top";
@@ -221,7 +220,7 @@ function renderPlayers() {
 
 function addPlayer() {
   if (!data.current) {
-    alert("กรุณาเพิ่มวิชาก่อน");
+    alert("กรุณาเพิ่มเจ้ามือก่อน");
     return;
   }
   let name = document.getElementById("playerName").value.trim();
@@ -231,6 +230,11 @@ function addPlayer() {
     saveData();
     renderPlayers();
   }
+}
+
+function multiplyValue(multiplier) {
+  let input = document.getElementById("pointValue");
+  input.value = Number(input.value) * multiplier;
 }
 
 // First load
